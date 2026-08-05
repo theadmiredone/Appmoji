@@ -41,10 +41,10 @@ Use commas to separate multiple guild, user, or role IDs. A space after a comma 
 
 ## Commands
 
-- `/appemoji list [query]` — list the app's emojis.
-- `/appemoji add image:<attachment> emoji:<custom-server-emoji-or-CDN-link> name:<name>` — add an emoji from exactly one source. `emoji` accepts typed custom emoji markup, such as `<:party:123456789012345678>`, or an official CDN link such as `https://cdn.discordapp.com/emojis/1530187698386501643.webp?size=32`.
-- `/appemoji edit emoji:<emoji> name:<name>` — rename an emoji.
-- `/appemoji remove emoji:<emoji>` — delete an emoji.
+- `/emoji list [query]` — list the app's emojis.
+- `/emoji add image:<attachment> emoji:<custom-server-emoji-or-CDN-link> name:<name>` — add an emoji from exactly one source. `emoji` accepts typed custom emoji markup, such as `<:party:123456789012345678>`, or an official CDN link such as `https://cdn.discordapp.com/emojis/1530187698386501643.webp?size=32`.
+- `/emoji edit emoji:<emoji> name:<name>` — rename an emoji.
+- `/emoji remove emoji:<emoji>` — delete an emoji.
 
 Commands are registered only in `GUILD_IDS`, cannot run in DMs, and default to Discord administrators. You can additionally allow particular users or roles via `USER_ID` and `ROLE_ID`; an administrator must enable the command for those non-admins in Discord's command permissions.
 

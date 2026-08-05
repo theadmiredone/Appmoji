@@ -11,11 +11,11 @@ client.once(Events.ClientReady, (readyClient) => {
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (interaction.isAutocomplete() && interaction.commandName === 'appemoji') {
+  if (interaction.isAutocomplete() && interaction.commandName === 'emoji') {
     await autocomplete(interaction, emojis);
     return;
   }
-  if (interaction.isChatInputCommand() && interaction.commandName === 'appemoji') {
+  if (interaction.isChatInputCommand() && interaction.commandName === 'emoji') {
     await execute(interaction, emojis);
   }
 });
