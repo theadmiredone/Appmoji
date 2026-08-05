@@ -25,6 +25,20 @@ It uses the Discord Gateway only for interactions and Discord's REST API for the
 
 For development, use `npm run dev`.
 
+### Environment variables
+
+Set these in `.env` after copying `.env.example`:
+
+```dotenv
+APPLICATION_ID=123456789012345678
+APP_TOKEN=your_bot_token
+GUILD_IDS=123456789012345678,234567890123456789
+USER_ID=345678901234567890, 456789012345678901
+ROLE_ID=567890123456789012,678901234567890123
+```
+
+Use commas to separate multiple guild, user, or role IDs. A space after a comma is optional; Appmoji trims it. Leave `USER_ID=` or `ROLE_ID=` empty when no additional users or roles should manage emojis.
+
 ## Commands
 
 - `/appemoji list [query]` — list the app's emojis.
@@ -32,7 +46,7 @@ For development, use `npm run dev`.
 - `/appemoji edit emoji:<emoji> name:<name>` — rename an emoji.
 - `/appemoji remove emoji:<emoji>` — delete an emoji.
 
-Commands are registered only in `DISCORD_GUILD_IDS`, cannot run in DMs, and default to Discord administrators. You can additionally allow particular users or roles via the optional manager environment variables; an administrator must enable the command for those non-admins in Discord's command permissions.
+Commands are registered only in `GUILD_IDS`, cannot run in DMs, and default to Discord administrators. You can additionally allow particular users or roles via `USER_ID` and `ROLE_ID`; an administrator must enable the command for those non-admins in Discord's command permissions.
 
 ## Security and operations
 
