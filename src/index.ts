@@ -1,5 +1,5 @@
 import { Client, Events, GatewayIntentBits } from 'discord.js';
-import { autocomplete, execute } from './commands/appemoji.js';
+import { autocomplete, execute } from './commands/emoji.js';
 import { config } from './config.js';
 import { ApplicationEmojiClient } from './lib/application-emoji-client.js';
 

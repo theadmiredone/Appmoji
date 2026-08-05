@@ -10,7 +10,7 @@ import { ApplicationEmojiClient, DiscordApiError } from '../lib/application-emoj
 import { attachmentToDataUri, emojiSourceToDataUri } from '../lib/image.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('appemoji')
+  .setName('emoji')
   .setDescription('Manage this application’s emojis.')
   .setDMPermission(false)
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
