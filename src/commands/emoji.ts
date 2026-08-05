@@ -107,7 +107,7 @@ export async function execute(
       if (Boolean(attachment) === Boolean(emojiSource)) {
         await interaction.editReply(
           componentReply(
-            'Provide exactly one source: an image attachment or a custom server emoji.'
+            'Provide one image source: an image attachment or a custom server emoji.'
           )
         );
         return;
@@ -118,7 +118,7 @@ export async function execute(
       const emoji = await emojis.create(name, image);
       await interaction.editReply(
         componentReply(
-          `**Added Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+          `> **Added Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
         )
       );
       return;
@@ -128,7 +128,7 @@ export async function execute(
       const emoji = await emojis.rename(emojiId, interaction.options.getString('name', true));
       await interaction.editReply(
         componentReply(
-          `**Updated Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+          `> **Updated Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
         )
       );
       return;
@@ -137,12 +137,12 @@ export async function execute(
     await emojis.delete(emojiId);
     await interaction.editReply(
       componentReply(
-        `**Removed Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+        `> **Removed Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
       )
     );
   } catch (error) {
     await interaction.editReply(
-      componentReply(`**Could not manage the application emoji**\n${friendlyError(error)}`)
+      componentReply(`> **Could not manage the application emoji**\n${friendlyError(error)}`)
     );
   }
 }
@@ -184,7 +184,7 @@ function renderList(items: APIEmoji[]): string {
   if (items.length === 0) return '**Application Emojis**\nNo application emojis found.';
   const rows = items
     .slice(0, 40)
-    .map((emoji) => `• ${emojiMention(emoji)} \`${emoji.name ?? 'unnamed'}\` — \`${emoji.id}\``);
+    .map((emoji) => `${emojiMention(emoji)} \`${emoji.name ?? 'unnamed'}\` — \`${emoji.id}\``);
   return `**Application Emojis (${items.length})**\n${rows.join('\n')}${items.length > 40 ? '\n…showing first 40.' : ''}`;
 }
 
