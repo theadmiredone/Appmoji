@@ -7,6 +7,7 @@ import {
 import type { APIEmoji } from 'discord-api-types/v10';
 import { config } from '../config.js';
 import { ApplicationEmojiClient, DiscordApiError } from '../lib/application-emoji-client.js';
+import { componentReply } from '../lib/component-reply.js';
 import { attachmentToDataUri, emojiSourceToDataUri } from '../lib/image.js';
 
 export const data = new SlashCommandBuilder()
@@ -72,17 +73,15 @@ export async function execute(
   emojis: ApplicationEmojiClient
 ): Promise<void> {
   if (!interaction.inGuild() || !config.guildIds.includes(interaction.guildId)) {
-    await interaction.reply({
-      content: 'This command is only available in configured guilds.',
-      ephemeral: true
-    });
+    await interaction.reply(
+      componentReply('This command is only available in configured guilds.', true)
+    );
     return;
   }
   if (!(await canManage(interaction))) {
-    await interaction.reply({
-      content: 'You are not allowed to manage application emojis.',
-      ephemeral: true
-    });
+    await interaction.reply(
+      componentReply('You are not allowed to manage application emojis.', true)
+    );
     return;
   }
 
@@ -94,7 +93,7 @@ export async function execute(
       const items = (await emojis.list()).filter(
         (emoji) => !query || emoji.name?.toLowerCase().includes(query)
       );
-      await interaction.editReply(renderList(items));
+      await interaction.editReply(componentReply(renderList(items)));
       return;
     }
     if (subcommand === 'add') {
@@ -102,12 +101,14 @@ export async function execute(
       const emojiSource = interaction.options.getString('emoji');
       const name = interaction.options.getString('name');
       if (!name?.trim()) {
-        await interaction.editReply('Provide an emoji name.');
+        await interaction.editReply(componentReply('Provide an emoji name.'));
         return;
       }
       if (Boolean(attachment) === Boolean(emojiSource)) {
         await interaction.editReply(
-          'Provide exactly one source: an image attachment or a custom server emoji.'
+          componentReply(
+            'Provide exactly one source: an image attachment or a custom server emoji.'
+          )
         );
         return;
       }
@@ -115,19 +116,34 @@ export async function execute(
         ? await attachmentToDataUri(attachment)
         : await emojiSourceToDataUri(emojiSource ?? '');
       const emoji = await emojis.create(name, image);
-      await interaction.editReply(`Added application emoji **:${emoji.name}:** (\`${emoji.id}\`).`);
+      await interaction.editReply(
+        componentReply(
+          `**Added Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+        )
+      );
       return;
     }
     const emojiId = interaction.options.getString('emoji', true);
     if (subcommand === 'edit') {
       const emoji = await emojis.rename(emojiId, interaction.options.getString('name', true));
-      await interaction.editReply(`Renamed application emoji to **:${emoji.name}:**.`);
+      await interaction.editReply(
+        componentReply(
+          `**Updated Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+        )
+      );
       return;
     }
+    const emoji = await emojis.get(emojiId);
     await emojis.delete(emojiId);
-    await interaction.editReply('Application emoji removed.');
+    await interaction.editReply(
+      componentReply(
+        `**Removed Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+      )
+    );
   } catch (error) {
-    await interaction.editReply(`Could not manage the application emoji: ${friendlyError(error)}`);
+    await interaction.editReply(
+      componentReply(`**Could not manage the application emoji**\n${friendlyError(error)}`)
+    );
   }
 }
 
@@ -165,14 +181,16 @@ async function canManage(interaction: ChatInputCommandInteraction): Promise<bool
 }
 
 function renderList(items: APIEmoji[]): string {
-  if (items.length === 0) return 'No application emojis found.';
+  if (items.length === 0) return '**Application Emojis**\nNo application emojis found.';
   const rows = items
-    .slice(0, 100)
-    .map(
-      (emoji) =>
-        `• **:${emoji.name ?? 'unnamed'}:** \`${emoji.id}\`${emoji.animated ? ' (animated)' : ''}`
-    );
-  return `Application emojis (${items.length}):\n${rows.join('\n')}${items.length > 100 ? '\n…showing first 100.' : ''}`;
+    .slice(0, 40)
+    .map((emoji) => `• ${emojiMention(emoji)} \`${emoji.name ?? 'unnamed'}\` — \`${emoji.id}\``);
+  return `**Application Emojis (${items.length})**\n${rows.join('\n')}${items.length > 40 ? '\n…showing first 40.' : ''}`;
+}
+
+function emojiMention(emoji: APIEmoji): string {
+  if (!emoji.id || !emoji.name) return ':unknown_emoji:';
+  return `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`;
 }
 
 function friendlyError(error: unknown): string {
