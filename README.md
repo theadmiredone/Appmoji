@@ -29,6 +29,7 @@ For development, use `npm run dev`.
 
 - `/appemoji list [query]` — list the app's emojis.
 - `/appemoji add name:<name> image:<attachment>` — add an image up to 256 KiB.
+- `/appemoji add name:<name> emoji:<custom emoji>` — copy a typed custom server emoji, such as `<:party:123456789012345678>`. Supply either `image` or `emoji`, not both.
 - `/appemoji edit emoji:<emoji> name:<name>` — rename an emoji.
 - `/appemoji remove emoji:<emoji>` — delete an emoji.
 

@@ -1,5 +1,6 @@
-import { REST, RESTEvents } from '@discordjs/rest';
-import { Routes, type APIEmoji, type RESTPostAPIApplicationEmojisJSONBody } from 'discord-api-types/v10';
+import { REST, RESTEvents, type RouteLike } from '@discordjs/rest';
+import { Routes, type APIEmoji } from 'discord-api-types/v10';
+import type { RESTPostAPIApplicationEmojiJSONBody } from 'discord-api-types/rest/v10';
 
 export interface ApplicationEmojiList {
   items: APIEmoji[];
@@ -29,7 +30,9 @@ export class ApplicationEmojiClient {
   }
 
   public async list(): Promise<APIEmoji[]> {
-    return (await this.request<ApplicationEmojiList>('get', Routes.applicationEmojis(this.applicationId))).items;
+    return (
+      await this.request<ApplicationEmojiList>('get', Routes.applicationEmojis(this.applicationId))
+    ).items;
   }
 
   public get(emojiId: string): Promise<APIEmoji> {
@@ -37,7 +40,7 @@ export class ApplicationEmojiClient {
   }
 
   public create(name: string, image: string): Promise<APIEmoji> {
-    const body: RESTPostAPIApplicationEmojisJSONBody = { name, image };
+    const body: RESTPostAPIApplicationEmojiJSONBody = { name, image };
     return this.request('post', Routes.applicationEmojis(this.applicationId), body);
   }
 
@@ -49,7 +52,11 @@ export class ApplicationEmojiClient {
     await this.request('delete', Routes.applicationEmoji(this.applicationId, emojiId));
   }
 
-  private async request<T>(method: 'get' | 'post' | 'patch' | 'delete', route: string, body?: unknown): Promise<T> {
+  private async request<T>(
+    method: 'get' | 'post' | 'patch' | 'delete',
+    route: RouteLike,
+    body?: unknown
+  ): Promise<T> {
     try {
       switch (method) {
         case 'get':
@@ -63,9 +70,13 @@ export class ApplicationEmojiClient {
       }
     } catch (error) {
       const details = error instanceof Error ? error.message : 'Unknown Discord API error';
-      const status = typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number'
-        ? error.status
-        : 500;
+      const status =
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        typeof error.status === 'number'
+          ? error.status
+          : 500;
       throw new DiscordApiError(status, details);
     }
   }

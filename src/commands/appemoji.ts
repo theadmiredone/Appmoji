@@ -7,7 +7,7 @@ import {
 import type { APIEmoji } from 'discord-api-types/v10';
 import { config } from '../config.js';
 import { ApplicationEmojiClient, DiscordApiError } from '../lib/application-emoji-client.js';
-import { attachmentToDataUri } from '../lib/image.js';
+import { attachmentToDataUri, customEmojiToDataUri } from '../lib/image.js';
 
 export const data = new SlashCommandBuilder()
   .setName('appemoji')
@@ -15,38 +15,74 @@ export const data = new SlashCommandBuilder()
   .setDMPermission(false)
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .addSubcommand((command) =>
-    command.setName('list').setDescription('List application emojis.').addStringOption((option) =>
-      option.setName('query').setDescription('Filter by emoji name.').setMaxLength(32)
-    )
+    command
+      .setName('list')
+      .setDescription('List application emojis.')
+      .addStringOption((option) =>
+        option.setName('query').setDescription('Filter by emoji name.').setMaxLength(32)
+      )
   )
   .addSubcommand((command) =>
     command
       .setName('add')
       .setDescription('Add an application emoji.')
-      .addStringOption((option) => option.setName('name').setDescription('Emoji name.').setRequired(true).setMaxLength(32))
-      .addAttachmentOption((option) => option.setName('image').setDescription('Emoji image (max 256 KiB).').setRequired(true))
+      .addStringOption((option) =>
+        option.setName('name').setDescription('Emoji name.').setRequired(true).setMaxLength(32)
+      )
+      .addAttachmentOption((option) =>
+        option.setName('image').setDescription('Emoji image (max 256 KiB).')
+      )
+      .addStringOption((option) =>
+        option
+          .setName('emoji')
+          .setDescription('A custom Discord emoji to copy, e.g. <:party:123...>.')
+          .setMaxLength(100)
+      )
   )
   .addSubcommand((command) =>
     command
       .setName('edit')
       .setDescription('Rename an application emoji.')
-      .addStringOption((option) => option.setName('emoji').setDescription('Emoji to rename.').setRequired(true).setAutocomplete(true))
-      .addStringOption((option) => option.setName('name').setDescription('New emoji name.').setRequired(true).setMaxLength(32))
+      .addStringOption((option) =>
+        option
+          .setName('emoji')
+          .setDescription('Emoji to rename.')
+          .setRequired(true)
+          .setAutocomplete(true)
+      )
+      .addStringOption((option) =>
+        option.setName('name').setDescription('New emoji name.').setRequired(true).setMaxLength(32)
+      )
   )
   .addSubcommand((command) =>
     command
       .setName('remove')
       .setDescription('Remove an application emoji.')
-      .addStringOption((option) => option.setName('emoji').setDescription('Emoji to remove.').setRequired(true).setAutocomplete(true))
+      .addStringOption((option) =>
+        option
+          .setName('emoji')
+          .setDescription('Emoji to remove.')
+          .setRequired(true)
+          .setAutocomplete(true)
+      )
   );
 
-export async function execute(interaction: ChatInputCommandInteraction, emojis: ApplicationEmojiClient): Promise<void> {
+export async function execute(
+  interaction: ChatInputCommandInteraction,
+  emojis: ApplicationEmojiClient
+): Promise<void> {
   if (!interaction.inGuild() || !config.guildIds.includes(interaction.guildId)) {
-    await interaction.reply({ content: 'This command is only available in configured guilds.', ephemeral: true });
+    await interaction.reply({
+      content: 'This command is only available in configured guilds.',
+      ephemeral: true
+    });
     return;
   }
-  if (!canManage(interaction)) {
-    await interaction.reply({ content: 'You are not allowed to manage application emojis.', ephemeral: true });
+  if (!(await canManage(interaction))) {
+    await interaction.reply({
+      content: 'You are not allowed to manage application emojis.',
+      ephemeral: true
+    });
     return;
   }
 
@@ -55,13 +91,25 @@ export async function execute(interaction: ChatInputCommandInteraction, emojis: 
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === 'list') {
       const query = interaction.options.getString('query')?.toLowerCase();
-      const items = (await emojis.list()).filter((emoji) => !query || emoji.name?.toLowerCase().includes(query));
+      const items = (await emojis.list()).filter(
+        (emoji) => !query || emoji.name?.toLowerCase().includes(query)
+      );
       await interaction.editReply(renderList(items));
       return;
     }
     if (subcommand === 'add') {
-      const attachment = interaction.options.getAttachment('image', true);
-      const emoji = await emojis.create(interaction.options.getString('name', true), await attachmentToDataUri(attachment));
+      const attachment = interaction.options.getAttachment('image');
+      const sourceEmoji = interaction.options.getString('emoji');
+      if (Boolean(attachment) === Boolean(sourceEmoji)) {
+        await interaction.editReply(
+          'Provide exactly one source: an image attachment or a custom Discord emoji.'
+        );
+        return;
+      }
+      const image = attachment
+        ? await attachmentToDataUri(attachment)
+        : await customEmojiToDataUri(sourceEmoji ?? '');
+      const emoji = await emojis.create(interaction.options.getString('name', true), image);
       await interaction.editReply(`Added application emoji **:${emoji.name}:** (\`${emoji.id}\`).`);
       return;
     }
@@ -78,13 +126,19 @@ export async function execute(interaction: ChatInputCommandInteraction, emojis: 
   }
 }
 
-export async function autocomplete(interaction: AutocompleteInteraction, emojis: ApplicationEmojiClient): Promise<void> {
+export async function autocomplete(
+  interaction: AutocompleteInteraction,
+  emojis: ApplicationEmojiClient
+): Promise<void> {
   try {
     const focused = interaction.options.getFocused().toLowerCase();
     const choices = (await emojis.list())
       .filter((emoji) => emoji.name?.toLowerCase().includes(focused))
       .slice(0, 25)
-      .map((emoji) => ({ name: `:${emoji.name ?? 'unnamed'}: (${emoji.id ?? 'unknown'})`.slice(0, 100), value: emoji.id ?? '' }))
+      .map((emoji) => ({
+        name: `:${emoji.name ?? 'unnamed'}: (${emoji.id ?? 'unknown'})`.slice(0, 100),
+        value: emoji.id ?? ''
+      }))
       .filter((choice) => choice.value.length > 0);
     await interaction.respond(choices);
   } catch {
@@ -92,16 +146,27 @@ export async function autocomplete(interaction: AutocompleteInteraction, emojis:
   }
 }
 
-function canManage(interaction: ChatInputCommandInteraction): boolean {
+async function canManage(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) return true;
   if (config.managerUserIds.has(interaction.user.id)) return true;
-  const member = interaction.member;
-  return !('roles' in member) ? false : member.roles.cache.some((role) => config.managerRoleIds.has(role.id));
+  if (config.managerRoleIds.size === 0 || !interaction.guild) return false;
+
+  try {
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+    return member.roles.cache.some((role) => config.managerRoleIds.has(role.id));
+  } catch {
+    return false;
+  }
 }
 
 function renderList(items: APIEmoji[]): string {
   if (items.length === 0) return 'No application emojis found.';
-  const rows = items.slice(0, 100).map((emoji) => `• **:${emoji.name ?? 'unnamed'}:** \`${emoji.id}\`${emoji.animated ? ' (animated)' : ''}`);
+  const rows = items
+    .slice(0, 100)
+    .map(
+      (emoji) =>
+        `• **:${emoji.name ?? 'unnamed'}:** \`${emoji.id}\`${emoji.animated ? ' (animated)' : ''}`
+    );
   return `Application emojis (${items.length}):\n${rows.join('\n')}${items.length > 100 ? '\n…showing first 100.' : ''}`;
 }
 
