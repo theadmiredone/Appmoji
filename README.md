@@ -18,10 +18,10 @@ It uses the Discord Gateway only for interactions and Discord's REST API for the
 
    ```sh
    npm install
-   npm run deploy:commands
-   npm run build
    npm start
    ```
+
+`npm start` builds the TypeScript project, deploys the configured guild commands, then starts the bot.
 
 For development, use `npm run dev`.
 

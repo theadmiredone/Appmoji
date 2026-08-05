@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
+    "start": "npm run build && npm run deploy:commands && node dist/index.js",
     "build": "tsc -p tsconfig.json",
     "deploy:commands": "tsx src/deploy-commands.ts",
     "check": "tsc --noEmit -p tsconfig.json",

@@ -106,9 +106,7 @@ export async function execute(
       }
       if (Boolean(attachment) === Boolean(emojiSource)) {
         await interaction.editReply(
-          componentReply(
-            'Provide one image source: an image attachment or a custom server emoji.'
-          )
+          componentReply('Provide one image source: an image attachment or a custom server emoji.')
         );
         return;
       }
@@ -117,9 +115,7 @@ export async function execute(
         : await emojiSourceToDataUri(emojiSource ?? '');
       const emoji = await emojis.create(name, image);
       await interaction.editReply(
-        componentReply(
-            `> Added App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``
-        )
+        componentReply(`> Added App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``)
       );
       return;
     }
@@ -127,18 +123,14 @@ export async function execute(
     if (subcommand === 'edit') {
       const emoji = await emojis.rename(emojiId, interaction.options.getString('name', true));
       await interaction.editReply(
-        componentReply(
-          `> Updated App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``
-        )
+        componentReply(`> Updated App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``)
       );
       return;
     }
     const emoji = await emojis.get(emojiId);
     await emojis.delete(emojiId);
     await interaction.editReply(
-      componentReply(
-        `> Removed App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``
-      )
+      componentReply(`> Removed App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``)
     );
   } catch (error) {
     await interaction.editReply(
