@@ -118,7 +118,7 @@ export async function execute(
       const emoji = await emojis.create(name, image);
       await interaction.editReply(
         componentReply(
-          `> **Added Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+            `> Added App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``
         )
       );
       return;
@@ -128,7 +128,7 @@ export async function execute(
       const emoji = await emojis.rename(emojiId, interaction.options.getString('name', true));
       await interaction.editReply(
         componentReply(
-          `> **Updated Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+          `> Updated App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``
         )
       );
       return;
@@ -137,7 +137,7 @@ export async function execute(
     await emojis.delete(emojiId);
     await interaction.editReply(
       componentReply(
-        `> **Removed Application Emoji**\n${emojiMention(emoji)} \`${emojiMention(emoji)}\``
+        `> Removed App Emoji ${emojiMention(emoji)} \`${emojiMention(emoji)}\``
       )
     );
   } catch (error) {
