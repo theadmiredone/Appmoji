@@ -8,6 +8,11 @@ import type { APIEmoji } from 'discord-api-types/v10';
 import { config } from '../config.js';
 import { ApplicationEmojiClient, DiscordApiError } from '../lib/application-emoji-client.js';
 import { componentReply } from '../lib/component-reply.js';
+import {
+  createConstantsFile,
+  saveConstantsFile,
+  type ConstantsFormat
+} from '../lib/constants-file.js';
 import { attachmentToDataUri, emojiSourceToDataUri } from '../lib/image.js';
 
 export const data = new SlashCommandBuilder()
@@ -21,6 +26,34 @@ export const data = new SlashCommandBuilder()
       .setDescription('List application emojis.')
       .addStringOption((option) =>
         option.setName('query').setDescription('Filter by emoji name.').setMaxLength(32)
+      )
+  )
+  .addSubcommand((command) =>
+    command
+      .setName('constants')
+      .setDescription('Download application emoji constants for a framework.')
+      .addStringOption((option) =>
+        option
+          .setName('format')
+          .setDescription('Framework or file format.')
+          .setRequired(true)
+          .addChoices(
+            { name: 'discord.js (TypeScript)', value: 'discordjs-ts' },
+            { name: 'discord.js (JavaScript)', value: 'discordjs-js' },
+            { name: 'discord.py', value: 'discordpy' },
+            { name: 'Pycord', value: 'pycord' },
+            { name: 'Hikari', value: 'hikari' },
+            { name: 'JSON', value: 'json' },
+            { name: 'DPP (C++)', value: 'dpp' }
+          )
+      )
+      .addBooleanOption((option) =>
+        option.setName('save').setDescription('Save a copy to src/generated in the bot project.')
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName('overwrite')
+          .setDescription('Replace an existing generated file (only applies when save is true).')
       )
   )
   .addSubcommand((command) =>
@@ -94,6 +127,27 @@ export async function execute(
         (emoji) => !query || emoji.name?.toLowerCase().includes(query)
       );
       await interaction.editReply(componentReply(renderList(items)));
+      return;
+    }
+    if (subcommand === 'constants') {
+      const output = createConstantsFile(
+        interaction.options.getString('format', true) as ConstantsFormat,
+        await emojis.list()
+      );
+      const save = interaction.options.getBoolean('save') ?? false;
+      const savedPath = save
+        ? await saveConstantsFile(output, interaction.options.getBoolean('overwrite') ?? false)
+        : undefined;
+      await interaction.editReply({
+        ...componentReply(
+          savedPath
+            ? `**Emoji Constants Saved**\n\`${savedPath}\``
+            : `**Emoji Constants Ready**\n\`${output.name}\``,
+          false,
+          output.name
+        ),
+        files: [{ attachment: Buffer.from(output.content), name: output.name }]
+      });
       return;
     }
     if (subcommand === 'add') {

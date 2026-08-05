@@ -1,16 +1,27 @@
 import { MessageFlags } from 'discord.js';
-import { ComponentType, type APIContainerComponent } from 'discord-api-types/v10';
+import {
+  ComponentType,
+  type APIComponentInContainer,
+  type APIContainerComponent
+} from 'discord-api-types/v10';
 
-export function componentReply(content: string, ephemeral = false) {
+export function componentReply(content: string, ephemeral = false, fileName?: string) {
+  const children: APIComponentInContainer[] = [
+    {
+      type: ComponentType.TextDisplay,
+      content
+    }
+  ];
+  if (fileName) {
+    children.push({
+      type: ComponentType.File,
+      file: { url: `attachment://${fileName}` }
+    });
+  }
   const components = [
     {
       type: ComponentType.Container,
-      components: [
-        {
-          type: ComponentType.TextDisplay,
-          content
-        }
-      ]
+      components: children
     }
   ] satisfies APIContainerComponent[];
 

@@ -35,13 +35,17 @@ APP_TOKEN=your_bot_token
 GUILD_IDS=123456789012345678,234567890123456789
 USER_ID=345678901234567890, 456789012345678901
 ROLE_ID=567890123456789012,678901234567890123
+EMOJI_SYNC_GUILD_IDS=789012345678901234,890123456789012345
 ```
 
 Use commas to separate multiple guild, user, or role IDs. A space after a comma is optional; Appmoji trims it. Leave `USER_ID=` or `ROLE_ID=` empty when no additional users or roles should manage emojis.
 
+`EMOJI_SYNC_GUILD_IDS` is optional. On every startup, Appmoji copies each configured guild's custom emojis into the application, skipping names that already exist. Leave it empty to disable the sync. The bot must be a member of every listed guild.
+
 ## Commands
 
 - `/emoji list [query]` — list the app's emojis.
+- `/emoji constants format:<framework> [save:true] [overwrite:true]` — download application emoji constants for discord.js (TypeScript or JavaScript), discord.py, Pycord, Hikari, JSON, or DPP (C++). `save:true` also writes the file to `src/generated/`; existing files are protected unless `overwrite:true` is explicitly supplied.
 - `/emoji add image:<attachment> emoji:<custom-server-emoji-or-CDN-link> name:<name>` — add an emoji from exactly one source. `emoji` accepts typed custom emoji markup, such as `<:party:123456789012345678>`, or an official CDN link such as `https://cdn.discordapp.com/emojis/1530187698386501643.webp?size=32`.
 - `/emoji edit emoji:<emoji> name:<name>` — rename an emoji.
 - `/emoji remove emoji:<emoji>` — delete an emoji.

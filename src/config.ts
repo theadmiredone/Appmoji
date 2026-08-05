@@ -8,7 +8,8 @@ const environment = z.object({
   APP_TOKEN: z.string().min(1),
   GUILD_IDS: z.string().min(1),
   USER_ID: z.string().optional(),
-  ROLE_ID: z.string().optional()
+  ROLE_ID: z.string().optional(),
+  EMOJI_SYNC_GUILD_IDS: z.string().optional()
 });
 
 const usingLegacyVariables = [
@@ -24,7 +25,8 @@ const input = {
   APP_TOKEN: process.env.APP_TOKEN ?? process.env.DISCORD_TOKEN,
   GUILD_IDS: process.env.GUILD_IDS ?? process.env.DISCORD_GUILD_IDS,
   USER_ID: process.env.USER_ID ?? process.env.APP_EMOJI_MANAGER_USER_IDS,
-  ROLE_ID: process.env.ROLE_ID ?? process.env.APP_EMOJI_MANAGER_ROLE_IDS
+  ROLE_ID: process.env.ROLE_ID ?? process.env.APP_EMOJI_MANAGER_ROLE_IDS,
+  EMOJI_SYNC_GUILD_IDS: process.env.EMOJI_SYNC_GUILD_IDS
 };
 
 function idList(value: string | undefined, name: string): readonly string[] {
@@ -51,5 +53,6 @@ export const config = {
   token: parsed.APP_TOKEN,
   guildIds: idList(parsed.GUILD_IDS, 'GUILD_IDS'),
   managerUserIds: new Set(idList(parsed.USER_ID, 'USER_ID')),
-  managerRoleIds: new Set(idList(parsed.ROLE_ID, 'ROLE_ID'))
+  managerRoleIds: new Set(idList(parsed.ROLE_ID, 'ROLE_ID')),
+  emojiSyncGuildIds: idList(parsed.EMOJI_SYNC_GUILD_IDS, 'EMOJI_SYNC_GUILD_IDS')
 } as const;
