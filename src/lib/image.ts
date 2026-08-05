@@ -17,16 +17,31 @@ export async function attachmentToDataUri(attachment: Attachment): Promise<strin
   return imageUrlToDataUri(attachment.url);
 }
 
-export async function customEmojiToDataUri(value: string): Promise<string> {
+export async function emojiSourceToDataUri(value: string): Promise<string> {
   const match = /^<(a?):[a-zA-Z0-9_]{2,32}:(\d{17,20})>$/.exec(value.trim());
-  if (!match) {
-    throw new Error('Type a custom Discord emoji, for example <:party:123456789012345678>.');
+  if (match) {
+    const [, animated, emojiId] = match;
+    if (!emojiId) throw new Error('The custom emoji ID is missing.');
+    const extension = animated === 'a' ? 'gif' : 'webp';
+    return imageUrlToDataUri(`https://cdn.discordapp.com/emojis/${emojiId}.${extension}`);
   }
 
-  const [, animated, emojiId] = match;
-  if (!emojiId) throw new Error('The custom emoji ID is missing.');
-  const extension = animated === 'a' ? 'gif' : 'webp';
-  return imageUrlToDataUri(`https://cdn.discordapp.com/emojis/${emojiId}.${extension}`);
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new Error('Use a custom Discord emoji or a https://cdn.discordapp.com/emojis/... link.');
+  }
+  if (url.protocol !== 'https:' || url.hostname !== 'cdn.discordapp.com') {
+    throw new Error('The emoji link must use cdn.discordapp.com.');
+  }
+  const linkMatch = /^\/emojis\/(\d{17,20})\.(png|jpe?g|gif|webp|avif)$/i.exec(url.pathname);
+  if (!linkMatch?.[1] || !linkMatch[2]) {
+    throw new Error('The link is not a valid Discord CDN emoji URL.');
+  }
+  return imageUrlToDataUri(
+    `https://cdn.discordapp.com/emojis/${linkMatch[1]}.${linkMatch[2].toLowerCase()}`
+  );
 }
 
 async function imageUrlToDataUri(url: string): Promise<string> {

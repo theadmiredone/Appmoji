@@ -7,7 +7,7 @@ import {
 import type { APIEmoji } from 'discord-api-types/v10';
 import { config } from '../config.js';
 import { ApplicationEmojiClient, DiscordApiError } from '../lib/application-emoji-client.js';
-import { attachmentToDataUri, customEmojiToDataUri } from '../lib/image.js';
+import { attachmentToDataUri, emojiSourceToDataUri } from '../lib/image.js';
 
 export const data = new SlashCommandBuilder()
   .setName('appemoji')
@@ -26,17 +26,17 @@ export const data = new SlashCommandBuilder()
     command
       .setName('add')
       .setDescription('Add an application emoji.')
-      .addStringOption((option) =>
-        option.setName('name').setDescription('Emoji name.').setRequired(true).setMaxLength(32)
-      )
       .addAttachmentOption((option) =>
         option.setName('image').setDescription('Emoji image (max 256 KiB).')
       )
       .addStringOption((option) =>
         option
           .setName('emoji')
-          .setDescription('A custom Discord emoji to copy, e.g. <:party:123...>.')
-          .setMaxLength(100)
+          .setDescription('Custom server emoji or Discord CDN emoji URL.')
+          .setMaxLength(200)
+      )
+      .addStringOption((option) =>
+        option.setName('name').setDescription('Emoji name.').setMaxLength(32)
       )
   )
   .addSubcommand((command) =>
@@ -99,17 +99,22 @@ export async function execute(
     }
     if (subcommand === 'add') {
       const attachment = interaction.options.getAttachment('image');
-      const sourceEmoji = interaction.options.getString('emoji');
-      if (Boolean(attachment) === Boolean(sourceEmoji)) {
+      const emojiSource = interaction.options.getString('emoji');
+      const name = interaction.options.getString('name');
+      if (!name?.trim()) {
+        await interaction.editReply('Provide an emoji name.');
+        return;
+      }
+      if (Boolean(attachment) === Boolean(emojiSource)) {
         await interaction.editReply(
-          'Provide exactly one source: an image attachment or a custom Discord emoji.'
+          'Provide exactly one source: an image attachment or a custom server emoji.'
         );
         return;
       }
       const image = attachment
         ? await attachmentToDataUri(attachment)
-        : await customEmojiToDataUri(sourceEmoji ?? '');
-      const emoji = await emojis.create(interaction.options.getString('name', true), image);
+        : await emojiSourceToDataUri(emojiSource ?? '');
+      const emoji = await emojis.create(name, image);
       await interaction.editReply(`Added application emoji **:${emoji.name}:** (\`${emoji.id}\`).`);
       return;
     }

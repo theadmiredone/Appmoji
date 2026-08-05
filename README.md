@@ -28,8 +28,7 @@ For development, use `npm run dev`.
 ## Commands
 
 - `/appemoji list [query]` — list the app's emojis.
-- `/appemoji add name:<name> image:<attachment>` — add an image up to 256 KiB.
-- `/appemoji add name:<name> emoji:<custom emoji>` — copy a typed custom server emoji, such as `<:party:123456789012345678>`. Supply either `image` or `emoji`, not both.
+- `/appemoji add image:<attachment> emoji:<custom-server-emoji-or-CDN-link> name:<name>` — add an emoji from exactly one source. `emoji` accepts typed custom emoji markup, such as `<:party:123456789012345678>`, or an official CDN link such as `https://cdn.discordapp.com/emojis/1530187698386501643.webp?size=32`.
 - `/appemoji edit emoji:<emoji> name:<name>` — rename an emoji.
 - `/appemoji remove emoji:<emoji>` — delete an emoji.
 
